@@ -60,6 +60,21 @@ class GameViewController: UIViewController {
             return tentativeX >= 0 ? tentativeX : 0
         }
         
+        // This nested function provides the y-position for a component view
+        func yPositionForViewAtPosition(_ order: Int, views: [UIView]) -> CGFloat {
+            assert(views.count > 0)
+            assert(order >= 0 && order < views.count)
+            let totalHeight = CGFloat(views.count - 1)*viewPadding + views.map({$0.bounds.size.height}).reduce(verticalViewOffset, {$0 + $1})
+            let viewsTop = 0.5*(vcHeight - totalHeight) >= 0 ? 0.5*(vcHeight - totalHeight) : 0
+            
+            // Not sure how to slice an array yet
+            var acc: CGFloat = 0
+            for i in 0..<order {
+                acc += viewPadding + views[i].bounds.size.height
+            }
+            return viewsTop + acc
+        }
+        
         // Create the scrore view
         let scoreView = ScoreView(backgroundColor: UIColor.black,
                                   textColor: UIColor.white,
@@ -83,11 +98,13 @@ class GameViewController: UIViewController {
         
         var f = scoreView.frame
         f.origin.x = xPositionToCenterView(scoreView)
+        f.origin.y = yPositionForViewAtPosition(0, views: views)
         scoreView.frame = f
         
         
         f = gameboard.frame
         f.origin.x = xPositionToCenterView(gameboard)
+        f.origin.y = yPositionForViewAtPosition(1, views: views)
         gameboard.frame = f
         
         // Add to game state
