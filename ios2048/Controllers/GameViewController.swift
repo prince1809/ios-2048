@@ -18,6 +18,8 @@ class GameViewController: UIViewController {
     var board: GameboardView?
     //var model: GameModel?
     
+    var scoreView: ScoreViewProtocol?
+    
     // Width of the gameboard
     let boardWidth: CGFloat = 230.0
     
@@ -51,8 +53,21 @@ class GameViewController: UIViewController {
         let vcHeight = view.bounds.size.height
         let vcWidth = view.bounds.size.width
         
-        // Create the scrore view
+        // This nested function provides the x-position for a component view
+        func xPositionToCenterView(_ v: UIView) -> CGFloat {
+            let viewWidth = v.bounds.size.width
+            let tentativeX = 0.5*(vcWidth - viewWidth)
+            return tentativeX >= 0 ? tentativeX : 0
+        }
         
+        // Create the scrore view
+        let scoreView = ScoreView(backgroundColor: UIColor.black,
+                                  textColor: UIColor.white,
+                                  font: UIFont(name: "HelveticaNeue-Bold", size: 16.0) ?? UIFont.systemFont(ofSize: 16.0),
+                                  radius: 6)
+        scoreView.score = 0
+        
+        // Create the gameboard
         let padding: CGFloat = dimension > 5 ? thinPadding : thickPadding
         let v1 = boardWidth - padding*(CGFloat(dimension + 1))
         let width: CGFloat = CGFloat(floorf(CFloat(v1)))/CGFloat(dimension)
@@ -63,8 +78,23 @@ class GameViewController: UIViewController {
                                       backgroundColor: UIColor.black,
                                       foregroundColor: UIColor.darkGray)
         
+        // Set up the frames
+        let views = [scoreView, gameboard]
+        
+        var f = scoreView.frame
+        f.origin.x = xPositionToCenterView(scoreView)
+        scoreView.frame = f
+        
+        
+        f = gameboard.frame
+        f.origin.x = xPositionToCenterView(gameboard)
+        gameboard.frame = f
+        
         // Add to game state
         view.addSubview(gameboard)
+        board = gameboard
+        view.addSubview(scoreView)
+        self.scoreView = scoreView
         
     }
 }

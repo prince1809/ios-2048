@@ -13,10 +13,10 @@ protocol ScoreViewProtocol {
 }
 
 // A simple view that displays the player's score.
-class ScoreView: UIView {
+class ScoreView: UIView, ScoreViewProtocol {
     var score :Int = 0 {
         didSet {
-            
+            label.text = "SCORE: \(score)"
         }
     }
     
@@ -27,10 +27,19 @@ class ScoreView: UIView {
         label = UILabel(frame: defaultFrame)
         label.textAlignment = NSTextAlignment.center
         super.init(frame: defaultFrame)
+        backgroundColor = bgColor
+        label.textColor = tcolor
+        label.font = font
+        layer.cornerRadius = r
+        self.addSubview(label)
     }
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("NSCoding not supported")
+    }
+    
+    func scoreChanged(to s: Int) {
+        score = s
     }
 }
 
