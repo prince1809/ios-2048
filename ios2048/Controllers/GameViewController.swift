@@ -39,6 +39,7 @@ class GameViewController: UIViewController, GameModelProtocol {
         super.init(nibName: nil, bundle: nil)
         model = GameModel(dimension: dimension, threshold: threshold, delegate: self)
         view.backgroundColor = UIColor.white
+        setupSwipeControls()
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -47,6 +48,24 @@ class GameViewController: UIViewController, GameModelProtocol {
     
     func setupSwipeControls() {
         let upSwipe = UISwipeGestureRecognizer(target: self, action: #selector(GameViewController.upCommand(_:)))
+        upSwipe.numberOfTouchesRequired = 1
+        upSwipe.direction = UISwipeGestureRecognizer.Direction.up
+        view.addGestureRecognizer(upSwipe)
+        
+        let downSwipe = UISwipeGestureRecognizer(target: self, action: #selector(GameViewController.downCommand(_:)))
+        upSwipe.numberOfTouchesRequired = 1
+        upSwipe.direction = UISwipeGestureRecognizer.Direction.down
+        view.addGestureRecognizer(downSwipe)
+        
+        let leftSwipe = UISwipeGestureRecognizer(target: self, action: #selector(GameViewController.leftCommand(_:)))
+        upSwipe.numberOfTouchesRequired = 1
+        upSwipe.direction = UISwipeGestureRecognizer.Direction.left
+        view.addGestureRecognizer(leftSwipe)
+        
+        let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(GameViewController.rightCommand(_:)))
+        upSwipe.numberOfTouchesRequired = 1
+        upSwipe.direction = UISwipeGestureRecognizer.Direction.right
+        view.addGestureRecognizer(rightSwipe)
     }
     
     override func viewDidLoad() {
@@ -124,11 +143,20 @@ class GameViewController: UIViewController, GameModelProtocol {
         m.insertTileAtRandomLocation(withValue: 2)
     }
     
+    func followUp() {
+        
+    }
+    
     // Commands
     @objc(up:)
     func upCommand(_ r: UIGestureRecognizer!) {
         assert(model != nil)
         let m = model!
+        m.queueMove(direction: MoveDirection.up, onCompletion: { (changed: Bool) -> () in
+            if changed {
+                self.followUp()
+            }
+        })
     }
     
     @objc(down:)
