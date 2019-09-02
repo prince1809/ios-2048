@@ -17,6 +17,8 @@
 		A350B7CB231C06F300CA6BDC /* GameboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350B7CA231C06F300CA6BDC /* GameboardView.swift */; };
 		A350B7CD231C0D7400CA6BDC /* TileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350B7CC231C0D7400CA6BDC /* TileView.swift */; };
 		A350B7CF231C0E4300CA6BDC /* AppearanceProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = A350B7CE231C0E4300CA6BDC /* AppearanceProvider.swift */; };
+		A3E710A8231D42DA00C4272B /* GameModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3E710A7231D42DA00C4272B /* GameModel.swift */; };
+		A3E710AA231D4A2B00C4272B /* AuxiliaryModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3E710A9231D4A2B00C4272B /* AuxiliaryModels.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -32,6 +34,8 @@
 		A350B7CA231C06F300CA6BDC /* GameboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameboardView.swift; sourceTree = "<group>"; };
 		A350B7CC231C0D7400CA6BDC /* TileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TileView.swift; sourceTree = "<group>"; };
 		A350B7CE231C0E4300CA6BDC /* AppearanceProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceProvider.swift; sourceTree = "<group>"; };
+		A3E710A7231D42DA00C4272B /* GameModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameModel.swift; sourceTree = "<group>"; };
+		A3E710A9231D4A2B00C4272B /* AuxiliaryModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuxiliaryModels.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,6 +68,7 @@
 		A350B7AF231BE38C00CA6BDC /* ios2048 */ = {
 			isa = PBXGroup;
 			children = (
+				A3E710A6231D42C400C4272B /* Models */,
 				A350B7C7231BFA0C00CA6BDC /* Views */,
 				A350B7C2231BF70100CA6BDC /* Controllers */,
 				A350B7B0231BE38C00CA6BDC /* AppDelegate.swift */,
@@ -93,6 +98,15 @@
 				A350B7CE231C0E4300CA6BDC /* AppearanceProvider.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		A3E710A6231D42C400C4272B /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A3E710A7231D42DA00C4272B /* GameModel.swift */,
+				A3E710A9231D4A2B00C4272B /* AuxiliaryModels.swift */,
+			);
+			path = Models;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -171,7 +185,9 @@
 				A350B7C9231BFA2E00CA6BDC /* AccessoryViews.swift in Sources */,
 				A350B7CB231C06F300CA6BDC /* GameboardView.swift in Sources */,
 				A350B7B3231BE38C00CA6BDC /* ViewController.swift in Sources */,
+				A3E710A8231D42DA00C4272B /* GameModel.swift in Sources */,
 				A350B7CD231C0D7400CA6BDC /* TileView.swift in Sources */,
+				A3E710AA231D4A2B00C4272B /* AuxiliaryModels.swift in Sources */,
 				A350B7B1231BE38C00CA6BDC /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -8,7 +8,7 @@
 
 import UIKit
 
-class GameViewController: UIViewController {
+class GameViewController: UIViewController, GameModelProtocol {
     
     // How many tiles in both directions the gameboard contains
     var dimension: Int
@@ -16,7 +16,7 @@ class GameViewController: UIViewController {
     var threshold: Int
     
     var board: GameboardView?
-    //var model: GameModel?
+    var model: GameModel?
     
     var scoreView: ScoreViewProtocol?
     
@@ -37,11 +37,16 @@ class GameViewController: UIViewController {
         dimension = d > 2 ? d : 2
         threshold = t > 8 ? t : 8
         super.init(nibName: nil, bundle: nil)
+        model = GameModel(dimension: dimension, threshold: threshold, delegate: self)
         view.backgroundColor = UIColor.white
     }
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("NSCoding not supported")
+    }
+    
+    func setupSwipeControls() {
+        let upSwipe = UISwipeGestureRecognizer(target: self, action: #selector(GameViewController.upCommand(_:)))
     }
     
     override func viewDidLoad() {
@@ -113,5 +118,51 @@ class GameViewController: UIViewController {
         view.addSubview(scoreView)
         self.scoreView = scoreView
         
+        assert(model != nil)
+        let m = model!
+        m.insertTileAtRandomLocation(withValue: 2)
+        m.insertTileAtRandomLocation(withValue: 2)
     }
+    
+    // Commands
+    @objc(up:)
+    func upCommand(_ r: UIGestureRecognizer!) {
+        assert(model != nil)
+        let m = model!
+    }
+    
+    @objc(down:)
+    func downCommand(_ r: UIGestureRecognizer!) {
+        
+    }
+    
+    @objc(left:)
+    func leftCommand(_ r: UIGestureRecognizer!) {
+        
+    }
+    
+    @objc(right:)
+    func rightCommand(_ r: UIGestureRecognizer!) {
+        
+    }
+    
+    // Protocol
+    func scoreChanged(to score: Int) {
+        
+    }
+    
+    func moveOneTile(from: (Int, Int), to: (Int, Int), value: Int) {
+        
+    }
+    
+    func moveTwoTiles(from: ((Int, Int), (Int, Int)), to: (Int, Int), value: Int) {
+        
+    }
+    
+    func insertTile(at location: (Int, Int), withValue value: Int) {
+        assert(board != nil)
+        let b = board!
+        b.insertTile(at: location, value: value)
+    }
+    
 }

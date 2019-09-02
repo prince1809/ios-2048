@@ -15,6 +15,8 @@ class GameboardView: UIView {
     var cornerRadius: CGFloat
     var tiles: Dictionary<IndexPath, TileView>
     
+    let provider = AppearanceProvider()
+    
     init(dimension d: Int, tileWidth width: CGFloat, tilePadding padding: CGFloat, cornerRadius radius: CGFloat, backgroundColor: UIColor, foregroundColor: UIColor) {
         assert(d > 0)
         dimension = d
@@ -49,5 +51,17 @@ class GameboardView: UIView {
             }
             xCursor += tilePadding + tileWidth
         }
+    }
+    
+    /// Update the gameboard by inserting a tile in a given location. The tile willl be inserted with a 'pop' animation.
+    func insertTile(at pos: (Int, Int), value: Int) {
+        //assert(pos)
+        let (row, col) = pos
+        let x = tilePadding + CGFloat(col)*(tileWidth + tilePadding)
+        let y = tilePadding + CGFloat(row)*(tileWidth + tilePadding)
+        let r = (cornerRadius >= 2) ? cornerRadius - 2 : 0
+        let tile = TileView(position: CGPoint(x: x, y: y), width: tileWidth, value: value, radius: r, delegate: provider)
+        
+        addSubview(tile)
     }
 }
