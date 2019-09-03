@@ -8,6 +8,10 @@
 
 import UIKit
 
+/// A view controller representing the 2048 game. It serves mostly to tie a GameModela and a GameboardView
+/// together. Data flow works as follows: user input reaches the view controller and is forwarded to the model. Move
+/// orders calculated by the model are returned to the view controller and forewarded to the gameboard view, which
+/// performs any animation to update its state.
 class GameViewController: UIViewController, GameModelProtocol {
     
     // How many tiles in both directions the gameboard contains
@@ -22,13 +26,12 @@ class GameViewController: UIViewController, GameModelProtocol {
     
     // Width of the gameboard
     let boardWidth: CGFloat = 230.0
-    
     // How much padding to place between the tiles
     let thinPadding: CGFloat = 3.0
     let thickPadding: CGFloat = 6.0
     
     // Amount of space to place between the different component views (gameboard, score view, etc)
-    let viewPadding: CGFloat = 0.0
+    let viewPadding: CGFloat = 10.0
     
     // Amount that the vertical alignment of the component views should differ from if they were centered
     let verticalViewOffset: CGFloat = 0.0
@@ -53,18 +56,18 @@ class GameViewController: UIViewController, GameModelProtocol {
         view.addGestureRecognizer(upSwipe)
         
         let downSwipe = UISwipeGestureRecognizer(target: self, action: #selector(GameViewController.downCommand(_:)))
-        upSwipe.numberOfTouchesRequired = 1
-        upSwipe.direction = UISwipeGestureRecognizer.Direction.down
+        downSwipe.numberOfTouchesRequired = 1
+        downSwipe.direction = UISwipeGestureRecognizer.Direction.down
         view.addGestureRecognizer(downSwipe)
         
         let leftSwipe = UISwipeGestureRecognizer(target: self, action: #selector(GameViewController.leftCommand(_:)))
-        upSwipe.numberOfTouchesRequired = 1
-        upSwipe.direction = UISwipeGestureRecognizer.Direction.left
+        leftSwipe.numberOfTouchesRequired = 1
+        leftSwipe.direction = UISwipeGestureRecognizer.Direction.left
         view.addGestureRecognizer(leftSwipe)
         
         let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(GameViewController.rightCommand(_:)))
-        upSwipe.numberOfTouchesRequired = 1
-        upSwipe.direction = UISwipeGestureRecognizer.Direction.right
+        rightSwipe.numberOfTouchesRequired = 1
+        rightSwipe.direction = UISwipeGestureRecognizer.Direction.right
         view.addGestureRecognizer(rightSwipe)
     }
     
@@ -143,7 +146,25 @@ class GameViewController: UIViewController, GameModelProtocol {
         m.insertTileAtRandomLocation(withValue: 2)
     }
     
+    // Misc
     func followUp() {
+        assert(model != nil)
+        let m = model!
+        let (userWon, _) = m.userHasWon()
+        if userWon {
+            let alertView = UIAlertView()
+            alertView.title = "Victory!"
+            alertView.message = "You won!"
+            alertView.addButton(withTitle: "Cancel")
+            alertView.show()
+            return
+        }
+        
+        // Now, insert more tiles
+        let randomVal = Int(arc4random_uniform(10))
+        m.insertTileAtRandomLocation(withValue: randomVal == 1 ? 4 : 2)
+        
+        // At this point, the user may loose
         
     }
     
@@ -161,17 +182,35 @@ class GameViewController: UIViewController, GameModelProtocol {
     
     @objc(down:)
     func downCommand(_ r: UIGestureRecognizer!) {
-        
+        assert(model != nil)
+        let m = model!
+        m.queueMove(direction: MoveDirection.down, onCompletion: { (changed: Bool) -> () in
+            if changed {
+                self.followUp()
+            }
+        })
     }
     
     @objc(left:)
     func leftCommand(_ r: UIGestureRecognizer!) {
-        
+        assert(model != nil)
+        let m = model!
+        m.queueMove(direction: MoveDirection.left, onCompletion: { (changed: Bool) -> () in
+            if changed {
+                self.followUp()
+            }
+        })
     }
     
     @objc(right:)
     func rightCommand(_ r: UIGestureRecognizer!) {
-        
+        assert(model != nil)
+        let m = model!
+        m.queueMove(direction: MoveDirection.right, onCompletion: { (changed: Bool) -> () in
+            if changed {
+                self.followUp()
+            }
+        })
     }
     
     // Protocol

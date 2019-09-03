@@ -131,6 +131,17 @@ class GameModel : NSObject {
         return buffer
     }
     
+    func userHasWon() -> (Bool, (Int, Int)?) {
+        for i in 0..<dimension {
+            for j in 0..<dimension {
+                // Lookup a tile with the winning score or greater
+                if case let .tile(v) = gameboard[i, j], v >= threshold {
+                    return (true, (i, j))
+                }
+            }
+        }
+        return (false, nil)
+    }
     
     //--------------------------------------------------------------------------------------------------------------//
     
