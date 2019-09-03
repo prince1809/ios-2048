@@ -165,7 +165,14 @@ class GameViewController: UIViewController, GameModelProtocol {
         m.insertTileAtRandomLocation(withValue: randomVal == 1 ? 4 : 2)
         
         // At this point, the user may loose
-        
+        if m.userHasLost() {
+            NSLog("You lost")
+            let alertView = UIAlertView()
+            alertView.title = "Defeat"
+            alertView.message = "You lost..."
+            alertView.addButton(withTitle: "Cancel")
+            alertView.show()
+        }
     }
     
     // Commands

@@ -50,6 +50,16 @@ enum ActionToken {
         case let .doubleCombine(_, _, v): return v
         }
     }
+    
+    // Get the 'source' regardless of the specific type
+    func getSource() -> Int {
+        switch self {
+        case let .noAction(s, _): return s
+        case let .move(s, _): return s
+        case let .singleCombine(s, _): return s
+        case let .doubleCombine(s, _, _): return s
+        }
+    }
 }
 
 /// A struct representing a square gameboard. Because this struct uses generics, it could conceivably be used to

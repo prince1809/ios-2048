@@ -131,6 +131,54 @@ class GameModel : NSObject {
         return buffer
     }
     
+    //--------------------------------------------------------------------------------------------------------//
+    
+    func tileBelowHasSameValue(location: (Int, Int), value: Int) -> Bool {
+        let (x, y) = location
+        guard y != dimension - 1  else {
+            return false
+        }
+        if case let .tile(v) = gameboard[x, y+1] {
+            return v == value
+        }
+        return false
+    }
+    
+    func tileToRightHasSameValue(location: (Int, Int), value: Int) -> Bool {
+        let (x, y) = location
+        guard x != dimension - 1 else {
+            return false
+        }
+        if case let .tile(v) = gameboard[x+1, y] {
+            return v == value
+        }
+        return false
+    }
+    
+    
+    func userHasLost() -> Bool {
+        guard gameboardEmptySpots().isEmpty else {
+            // Player can't lose before filling up the board
+            return false
+        }
+        
+        // Run through all the tiles and check for possible moves
+        for i in 0..<dimension {
+            for j in 0..<dimension {
+                switch gameboard[i, j] {
+                case .empty:
+                    assert(false, "Gameboard reported itself as full, but we still found an empty tile. This is logic error")
+                case let .tile(v):
+                    if tileBelowHasSameValue(location: (i, j), value: v) ||
+                        tileToRightHasSameValue(location: (i, j), value: v) {
+                        return false
+                    }
+                }
+            }
+        }
+        return true
+    }
+    
     func userHasWon() -> (Bool, (Int, Int)?) {
         for i in 0..<dimension {
             for j in 0..<dimension {
@@ -147,7 +195,154 @@ class GameModel : NSObject {
     
     // Perform all calculations and upadte state for a single move.
     func performMove(direction: MoveDirection) -> Bool {
-        return true
+        
+        // Prepare the generator closure. This closure differs in behavior depending on the direction of the move. It is
+        // used by the method to generate a list of tiles which should be modified. Depending on the direction this list
+        // may represent a single row or a single column, in either direction.
+        let coordinateGenerator: (Int) -> [(Int, Int)] = { (iteration: Int) -> [(Int, Int)] in
+            var buffer = Array<(Int, Int)>(repeating: (0, 0), count: self.dimension)
+            for i in 0..<self.dimension {
+                switch direction {
+                case .up: buffer[i] = (i, iteration)
+                case .down: buffer[i] = (self.dimension - i - 1, iteration)
+                case .left: buffer[i] = (iteration, i)
+                case .right: buffer[i] = (iteration, self.dimension - i - 1)
+                }
+            }
+            return buffer
+        }
+        
+        var atLeastOneMove = false
+        for i in 0..<dimension {
+            // Get the list of coords
+            let coords = coordinateGenerator(i)
+            
+            // Get the corresponding list of tiles
+            let tiles = coords.map() { (c: (Int, Int)) -> TileObject in
+                let (x, y) = c
+                return self.gameboard[x, y]
+            }
+            
+            // Perform the operation
+            let orders = merge(tiles)
+            atLeastOneMove = orders.count > 0 ? true : atLeastOneMove
+            
+            // Write back the results
+            for object in orders {
+                switch object {
+                case let MoveOrder.SingleMoveOrder(s, d, v, wasMerge):
+                    // Perform a single-tile move
+                    let (sx, sy) = coords[s]
+                    let (dx, dy) = coords[d]
+                    if wasMerge {
+                        score += v
+                    }
+                    gameboard[sx, sy] = TileObject.empty
+                    gameboard[dx, dy] = TileObject.tile(v)
+                    delegate.moveOneTile(from: coords[s], to: coords[d], value: v)
+                case let MoveOrder.doubleMoveOrder(s1, s2, d, v):
+                    let (s1x, s1y) = coords[s1]
+                    let (s2x, s2y) = coords[s2]
+                    let (dx, dy) = coords[d]
+                    score += v
+                    gameboard[s1x, s1y] = TileObject.empty
+                    gameboard[s2x, s2y] = TileObject.empty
+                    gameboard[dx, dy] = TileObject.tile(v)
+                    delegate.moveTwoTiles(from: (coords[s1], coords[s2]), to: coords[d], value: v)
+                }
+            }
+        }
+        return atLeastOneMove
+    }
+    
+    //------------------------------------------------------------------------------------------------------------------//
+    
+    /// When computing the effects of a move upon a row of tiles, calculate and return a list of ActionTokens
+    /// corresponding to any moves necessary to remove interstial space. For example, |[2][ ][ ][4]| will become
+    /// |[2][4]|.
+    func condense(_ group: [TileObject]) -> [ActionToken] {
+        var tokenBuffer = [ActionToken]()
+        for (idx, tile) in group.enumerated() {
+            // Go through all the tiles in 'group'. When we see a tile 'out of place', create a corresponding ActionToken.
+            switch tile {
+            case let .tile(value) where tokenBuffer.count == idx:
+                tokenBuffer.append(ActionToken.noAction(source: idx, value: value))
+            case let .tile(value):
+                tokenBuffer.append(ActionToken.move(source: idx, value: value))
+            default:
+                break
+            }
+        }
+        return tokenBuffer
+    }
+    
+    class func quiescentTilesStillQuiescent(inputPosition: Int, outputLength: Int, originalPosition: Int) -> Bool {
+        // Return whether or not a 'Noction' token still represents an unmoved tile
+        return (inputPosition == outputLength) && (originalPosition == inputPosition)
+    }
+    
+    /// When computing the effects of a move upon a row of tiles, calculate and return an updated list of ActionTokens
+    /// corresponding to any merges that should take place. This method collapses adjacent tiles of equal value, but each
+    /// tile can take part in at most one collapse per move. For example, |[1][1][1][2][2]| will become |[2][1][4]|.
+    func collapse(_ group: [ActionToken]) -> [ActionToken] {
+        var tokenBuffer = [ActionToken]()
+        var skipNext = false
+        for (idx, token) in group.enumerated() {
+            if skipNext {
+                // Prior iteration handled a merge. So skip this iteration.
+                skipNext = false
+                continue
+            }
+            switch token {
+            case .singleCombine:
+                assert(false, "Cannot have single combine token in input")
+            case .doubleCombine:
+                assert(false, "Cannot have double combine token in input")
+            case let .noAction(s, v)
+                where (idx < group.count-1
+                    && v == group[idx+1].getValue()
+                    && GameModel.quiescentTilesStillQuiescent(inputPosition: idx, outputLength: tokenBuffer.count, originalPosition: s)):
+                // This tile hasn't moved yet, but matches the next tile. This is a single merge
+                // The last tile is *not* eligible for merge
+                let next = group[idx+1]
+                let nv = v + group[idx+1].getValue()
+                skipNext = true
+                tokenBuffer.append(ActionToken.singleCombine(source: next.getSource(), value: nv))
+                
+            default:
+                // Don't do anything
+                break
+            }
+        }
+        return tokenBuffer
+    }
+    
+    // When computing the effects of a
+    func convert(_ group: [ActionToken]) -> [MoveOrder] {
+        var moveBuffer = [MoveOrder]()
+        for (idx, t) in group.enumerated() {
+            switch t {
+            case let .move(s, v):
+                moveBuffer.append(MoveOrder.SingleMoveOrder(source: s, destination: idx, value: v, wasMerge: false))
+            case let .singleCombine(s, v):
+                moveBuffer.append(MoveOrder.SingleMoveOrder(source: s, destination: idx, value: v, wasMerge: true))
+            case let .doubleCombine(s1, s2, v):
+                moveBuffer.append(MoveOrder.doubleMoveOrder(firstSource: s1, secondSource: s2, destination: idx, value: v))
+            default:
+                // Don't do anything
+                break
+            }
+        }
+        return moveBuffer
+    }
+    
+    // Given an array of TileObjects, perform a collapse and create an array of move orders.
+    func merge(_ group: [TileObject]) -> [MoveOrder] {
+        // Calculation takes place in three steps:
+        // 1. Calculate the move necessary to produce the same tiles, but without any intersitial space.
+        // 2. Take the above, and calculate the moves necessay to collapse adjacent tiles of equal value.
+        // 3. Take the above, and convert into MoveOrders that provide all necessary information to the delegate.
+        return convert(collapse(condense(group)))
     }
     
 }
