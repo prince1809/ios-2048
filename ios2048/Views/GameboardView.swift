@@ -151,5 +151,6 @@ class GameboardView: UIView {
     /// represents tile collapse, and the combined tile 'pops' after both tiles move into position.
     func moveTwoTiles(from: ((Int, Int), (Int, Int)), to: (Int, Int), value: Int) {
         //assert(position)
+        print("move two tiles")
     }
 }

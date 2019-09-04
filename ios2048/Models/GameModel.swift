@@ -309,6 +309,20 @@ class GameModel : NSObject {
                 skipNext = true
                 tokenBuffer.append(ActionToken.singleCombine(source: next.getSource(), value: nv))
                 
+            case let t where (idx < group.count - 1 && t.getValue() == group[idx+1].getValue()):
+                // This tile has moved, and matches the next tile. This is a double merge
+                // ( The tile may either have moved previously, or the tile might have moved as a result of a previous merge)
+                // The last tile is *not* eligible for merge
+                let next = group[idx+1]
+                let nv = t.getValue() + group[idx+1].getValue()
+                skipNext = true
+                tokenBuffer.append(ActionToken.doubleCombine(source: t.getSource(), second: next.getSource(), value: nv))
+            case let .noAction(s, v) where !GameModel.quiescentTilesStillQuiescent(inputPosition: idx, outputLength: tokenBuffer.count, originalPosition: s):
+                // A tile that didn't move before has moved (first cond.), or there was a previous merge (second cond.)
+                tokenBuffer.append(ActionToken.move(source: s, value: v))
+            case let .noAction(s, v):
+                // A tile that didn't move before still hasn't moved
+                tokenBuffer.append(ActionToken.noAction(source: s, value: v))
             default:
                 // Don't do anything
                 break
