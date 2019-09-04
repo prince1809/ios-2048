@@ -97,6 +97,7 @@ class GameboardView: UIView {
     }
     
     func moveOneTile(from: (Int, Int), to: (Int, Int), value: Int) {
+        print("move one tile")
         assert(positionIsValid(from) && positionIsValid(to))
         let (fromRow, fromCol) = from
         let (toRow, toCol) = to
@@ -112,9 +113,9 @@ class GameboardView: UIView {
         // Make the frame
         var finalFrame = tile.frame
         finalFrame.origin.x = tilePadding + CGFloat(toCol)*(tileWidth + tilePadding)
-        finalFrame.origin.y = tilePadding + CGFloat(toCol)*(tileWidth + tilePadding)
+        finalFrame.origin.y = tilePadding + CGFloat(toRow)*(tileWidth + tilePadding)
         
-        // Update the board state
+        // Update board state
         tiles.removeValue(forKey: fromKey)
         tiles[toKey] = tile
         
@@ -122,35 +123,92 @@ class GameboardView: UIView {
         let shouldPop = endTile != nil
         UIView.animate(
             withDuration: perSequareSlideDuration,
-            delay: 0.0, options: UIView.AnimationOptions.beginFromCurrentState,
+            delay: 0.0,
+            options: UIView.AnimationOptions.beginFromCurrentState,
             animations: {
                 // Slide the tile
                 tile.frame = finalFrame
-        }, completion: { (finished: Bool) -> Void in
-            tile.value = value
-            endTile?.removeFromSuperview()
-            if !shouldPop || !finished {
-                return
-            }
-            tile.layer.setAffineTransform(CGAffineTransform(scaleX: self.tileMergeStartScale, y: self.tileMergeStartScale))
-            // Pop tile
-            UIView.animate(
-                withDuration: self.tileMergeExpandTime,
-                animations: {
-                    tile.layer.setAffineTransform(CGAffineTransform(scaleX: self.tilePopMaxScale, y: self.tilePopMaxScale))
-            }, completion: { finished in
-                // Contract tile to original size
-                UIView.animate(withDuration: self.tileMergeContractTime, animations: {
-                    tile.layer.setAffineTransform(CGAffineTransform.identity)
+        },
+            completion: { (finished: Bool) -> Void in
+                tile.value = value
+                endTile?.removeFromSuperview()
+                if !shouldPop || !finished {
+                    return
+                }
+                tile.layer.setAffineTransform(CGAffineTransform(scaleX: self.tileMergeStartScale, y: self.tileMergeStartScale))
+                // Pop tile
+                UIView.animate(
+                    withDuration: self.tileMergeExpandTime,
+                    animations: {
+                        tile.layer.setAffineTransform(CGAffineTransform(scaleX: self.tilePopMaxScale, y: self.tilePopMaxScale))
+                }, completion: { finished in
+                    // Contract tile to original size
+                    UIView.animate(withDuration: self.tileMergeContractTime, animations: {
+                        tile.layer.setAffineTransform(CGAffineTransform.identity)
+                    })
                 })
-            })
         })
     }
     
     // Update the gameboard by moving tiles from their original locations to a common destination. This action always
     /// represents tile collapse, and the combined tile 'pops' after both tiles move into position.
     func moveTwoTiles(from: ((Int, Int), (Int, Int)), to: (Int, Int), value: Int) {
-        //assert(position)
-        print("move two tiles")
+        assert(positionIsValid(from.0) && positionIsValid(from.1) && positionIsValid(to))
+        let (fromRowA, fromColA) = from.0
+        let (fromRowB, fromColB) = from.1
+        let (toRow, toCol) = to
+        let fromKeyA = IndexPath(row: fromRowA, section: fromColA)
+        let fromKeyB = IndexPath(row: fromRowB, section: fromColB)
+        let toKey = IndexPath(row: toRow, section: toCol)
+        
+        guard let tileA = tiles[fromKeyA] else {
+            assert(false, "placeholder error")
+        }
+        
+        guard let tileB = tiles[fromKeyB] else {
+            assert(false, "placeholder error")
+        }
+        
+        // Make the frame
+        var finalFrame = tileA.frame
+        finalFrame.origin.x = tilePadding + CGFloat(toCol)*(tileWidth + tilePadding)
+        finalFrame.origin.y = tilePadding + CGFloat(toRow)*(tileWidth + tilePadding)
+        
+        // Update the state
+        let oldTile = tiles[toKey]
+        oldTile?.removeFromSuperview()
+        tiles.removeValue(forKey: fromKeyA)
+        tiles.removeValue(forKey: fromKeyB)
+        tiles[toKey] = tileA
+        
+        UIView.animate(
+            withDuration: perSequareSlideDuration,
+            delay: 0.0,
+            options: UIView.AnimationOptions.beginFromCurrentState,
+            animations: {
+                // slide tiles
+                tileA.frame = finalFrame
+                tileB.frame = finalFrame
+            },
+            completion: { finished in
+                tileA.value = value
+                tileB.removeFromSuperview()
+                if !finished {
+                    return
+                }
+                tileA.layer.setAffineTransform(CGAffineTransform(scaleX: self.tileMergeStartScale, y: self.tileMergeStartScale))
+                // Pop tile
+                UIView.animate(
+                    withDuration: self.tileMergeExpandTime,
+                    animations: {
+                        tileA.layer.setAffineTransform(CGAffineTransform(scaleX: self.tilePopMaxScale, y: self.tilePopMaxScale))
+                }, completion: { finished in
+                    // Contract tile to original size
+                    UIView.animate(withDuration: self.tileMergeContractTime, animations: {
+                        tileA.layer.setAffineTransform(CGAffineTransform.identity)
+                    })
+                })
+                
+            })
     }
 }

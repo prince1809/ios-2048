@@ -222,15 +222,23 @@ class GameViewController: UIViewController, GameModelProtocol {
     
     // Protocol
     func scoreChanged(to score: Int) {
-        
+        if scoreView == nil {
+            return
+        }
+        let s = scoreView!
+        s.scoreChanged(to: score)
     }
     
     func moveOneTile(from: (Int, Int), to: (Int, Int), value: Int) {
-        
+        assert(board != nil)
+        let b = board!
+        b.moveOneTile(from: from, to: to, value: value)
     }
     
     func moveTwoTiles(from: ((Int, Int), (Int, Int)), to: (Int, Int), value: Int) {
-        
+        assert(board != nil)
+        let b = board!
+        b.moveTwoTiles(from: from, to: to, value: value)
     }
     
     func insertTile(at location: (Int, Int), withValue value: Int) {

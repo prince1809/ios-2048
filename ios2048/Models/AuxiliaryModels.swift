@@ -22,7 +22,7 @@ struct MoveCommand {
 // An enum representing a 'move order'. This is a data structure the game model uses to inform the view controller
 // which tiles on the gameboard should be moved and/or combined.
 enum MoveOrder {
-    case SingleMoveOrder(source: Int, destination: Int, value: Int, wasMerge: Bool)
+    case singleMoveOrder(source: Int, destination: Int, value: Int, wasMerge: Bool)
     case doubleMoveOrder(firstSource: Int, secondSource: Int, destination: Int, value: Int)
 }
 
